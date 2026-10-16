@@ -1,0 +1,70 @@
+/* Styles for the whole page. */
+/* (Written and planned together with Claude, the AI suggested what components to add and we checked) */
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #ffffff;
+  color: #111827;
+}
+
+/* Keep the page in the middle, not too wide. */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+/* Top bar */
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 2px solid #111827;
+}
+
+.navbar a {
+  color: #111827;
+  text-decoration: none;
+}
+
+.logo {
+  margin-left: auto; /* pushes the logo to the right side */
+  font-size: 24px;
+  font-weight: bold;
+  color: #012169; /* Duke blue */
+}
+
+/* Put things side by side, and wrap on small screens. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+  margin: 16px 0;
+}
+
+/* Each trend chart takes half the width (or full width on phones). */
+.chart {
+  flex: 1;
+  min-width: 280px;
+}
+
+h1 {
+  margin-top: 40px;
+}
+
+h2, h3 {
+  margin: 0 0 4px;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  margin-right: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
