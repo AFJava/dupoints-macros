@@ -1,5 +1,6 @@
 const express = require('express'); // Import the Express library
 const pool = require('../db'); // Import the database connection pool from the db.js file
+const { isValidDate } = require('../utils/dateUtils');
 const router = express.Router(); // Create a new router object to handle routes related to meal logs
 
 const validMealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -9,7 +10,7 @@ router.post('/', async (req, res) => {
     try {
         // Change for auth later: const user_id = req.user.id; 
         // Assuming you have user authentication and the user ID is available in req.user
-        const { user_id, item_id, quantity, meal_type } = req.body;
+        const { user_id, item_id, quantity, meal_date, meal_type } = req.body;
         
         // Validate that quantity is a positive number
         if (!Number.isFinite(quantity) || quantity <= 0) {
@@ -25,7 +26,14 @@ router.post('/', async (req, res) => {
             });
         }
 
-         // Validate that item_id is an integer
+        // Validate that meal_date is a valid date
+        if(!isValidDate(meal_date)) {
+            return res.status(400).json({
+                error: 'Meal date must be a valid calendar date'
+            });
+        }
+
+        // Validate that item_id is an integer
         if(!Number.isSafeInteger(item_id) || item_id <= 0) {
             return res.status(400).json({
                 error: 'Item ID must be a positive integer'
@@ -42,7 +50,7 @@ router.post('/', async (req, res) => {
 
         // Insert the meal log into the database
         const result = await pool.query(
-            'INSERT INTO meal_logs (user_id, item_id, quantity, meal_type) VALUES ($1, $2, $3, $4) RETURNING *',
+            'INSERT INTO meal_logs (user_id, item_id, quantity, meal_date, meal_type) VALUES ($1, $2, $3, $4) RETURNING *',
             [user_id, item_id, quantity, meal_type]
         );
         res.status(201).json(result.rows[0]);
