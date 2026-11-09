@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient.js";
 export default function SignUp({ setShowSignUp }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [netid, setNetid] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,6 +23,7 @@ export default function SignUp({ setShowSignUp }) {
         data: {
           first_name: firstName,
           last_name: lastName,
+          netid: netid,
         },
       },
     });
@@ -41,8 +43,8 @@ export default function SignUp({ setShowSignUp }) {
     <div className="signup">
       <h1>Sign Up</h1>
       <p>
-        Please enter your first name, last name, email and password to create an
-        account. If you already have an account, you can log in.
+        Please enter your first name, last name, NetID, email and password to
+        create an account. If you already have an account, you can log in.
       </p>
       <form onSubmit={handleSignUp}>
         <input
@@ -57,6 +59,13 @@ export default function SignUp({ setShowSignUp }) {
           placeholder="Last Name"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="NetID"
+          value={netid}
+          onChange={(e) => setNetid(e.target.value)}
           required
         />
         <input
