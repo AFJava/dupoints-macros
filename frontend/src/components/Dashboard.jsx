@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabaseClient.js";
 import MealHistory from "./MealHistory.jsx";
 import ProfileForm from "./ProfileForm.jsx";
+import FoodPointsSection from "./FoodPointsSection.jsx";
 
 // Recharts is a library that draws bar charts for us.
 import {
@@ -179,21 +180,7 @@ export default function Dashboard({ onLogout }) {
             </div>
           </div>
 
-          {/* Section 2: food points */}
-          <h1>Food Points</h1>
-          <p>
-            You spent {spentThisWeek} food points this week. You have{" "}
-            {foodPointsLeft} left.
-          </p>
-          {/* isAnimationActive={false} turns off the "grow" animation so bars show right away. */}
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={foodPointsByWeek}>
-              <XAxis dataKey="week" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="spent" fill="#012169" isAnimationActive={false} />
-            </BarChart>
-          </ResponsiveContainer>
+          <FoodPointsSection />
 
           {/* Section 3: trends, with a button to switch weekly / monthly */}
           <h1>Trends</h1>
