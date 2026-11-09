@@ -6,6 +6,41 @@ const authenticateUser = require('../middleware/authenticateUser');
 
 const validMealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
 
+// GET /api/meal-logs
+router.get('/', authenticateUser, async (req, res) => {
+    try {
+        const user_id = req.user.id;
+
+        // Retrieve the user's meal logs and their corresponding food information.
+        const result = await pool.query(
+            `SELECT
+                ml.id,
+                ml.item_id,
+                ml.quantity,
+                ml.meal_date,
+                ml.meal_type,
+                i.name,
+                i.restaurant,
+                i.kcal,
+                i.protein_g,
+                i.carbs_g,
+                i.total_fat_g
+            FROM meal_logs ml
+            JOIN items i ON i.id = ml.item_id
+            WHERE ml.user_id = $1
+            ORDER BY ml.meal_date DESC`,
+            [user_id]
+        );
+
+        res.status(200).json(result.rows);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+
 // POST /api/meal-logs
 router.post('/', authenticateUser, async (req, res) => {
     try {
