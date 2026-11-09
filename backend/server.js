@@ -10,6 +10,7 @@ app.use('/api/meal-logs', require('./routes/mealLogs'));
 app.use('/api/meal-totals', require('./routes/mealTotals'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/spending/schedule', require('./routes/spendingSchedule'));
+app.use('/api/trends', require('./routes/trends'));
 
 // Health check for the API server.
 app.get('/api/health', (req, res) => {
