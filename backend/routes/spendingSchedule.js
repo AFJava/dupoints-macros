@@ -2,43 +2,58 @@ const express = require('express'); // Import the Express library
 const pool = require('../db'); // Import the database connection pool from the db.js file
 const router = express.Router(); // Create a new router object to handle routes related to the spending schedule
 const authenticateUser = require('../middleware/authenticateUser');
-const { PLANS, SEMESTER_START, SEMESTER_END, weeklySchedule } = require('../data/foodPointChart');
+const { PLANS, SEMESTER_START, SEMESTER_END, weeklySchedule, expectedRemaining } = require('../data/foodPointChart');
 
-// GET /api/spending/schedule
-// Returns the expected weekly balance for the user's meal plan, assuming they spend
-// the recommended daily amount. Does not use any logged meals or item prices.
+// Rounds to 2 decimal places (money values)
+const round2 = (n) => Math.round(n * 100 + 1e-6) / 100;
+
+// GET /api/spending/schedule            -> uses the meal plan saved on the user's profile
+// GET /api/spending/schedule?plan=A     -> uses the plan letter in the URL (nothing is saved)
+// Returns the expected balance for the plan, assuming the student spends the recommended
+// daily amount. Does not use any logged meals or item prices.
 router.get('/', authenticateUser, async (req, res) => {
     try {
         const user_id = req.user.id;
+        let plan_letter;
 
-        // Look up the user's meal plan (set in Feature 1). meal_plan_id points to meal_plans,
-        // whose "plan" column holds a label like "Plan A"
-        const planResult = await pool.query(
-            `SELECT mp.plan
-            FROM user_profiles up
-            JOIN meal_plans mp ON mp.id = up.meal_plan_id
-            WHERE up.user_id = $1`,
-            [user_id]
-        );
+        if (req.query.plan !== undefined) {
+            // A plan was picked in the URL (e.g. from the dashboard dropdown)
+            plan_letter = String(req.query.plan).trim().toUpperCase();
+        } else {
+            // Otherwise look up the user's saved meal plan (set on the profile page).
+            // meal_plan_id points to meal_plans, whose "plan" column holds a label like "Plan A"
+            const planResult = await pool.query(
+                `SELECT mp.plan
+                FROM user_profiles up
+                JOIN meal_plans mp ON mp.id = up.meal_plan_id
+                WHERE up.user_id = $1`,
+                [user_id]
+            );
 
-        // User has no profile or never picked a plan; prompt them to choose one
-        if (planResult.rows.length === 0) {
-            return res.status(404).json({ error: 'No meal plan selected' });
+            // User has no profile or never picked a plan; the frontend can prompt them to choose one
+            if (planResult.rows.length === 0) {
+                return res.status(404).json({ error: 'No meal plan selected' });
+            }
+
+            // "Plan A" -> "A" (matches the keys loaded from foodpoints.csv)
+            plan_letter = planResult.rows[0].plan.replace(/plan/i, '').trim().toUpperCase();
         }
 
-        // "Plan A" -> "A" (matches foodpoints.csv)
-        const plan_letter = planResult.rows[0].plan.replace(/plan/i, '').trim().toUpperCase();
-
-        if (!PLANS[plan_letter]) {
+        if (!Object.hasOwn(PLANS, plan_letter)) {
             return res.status(400).json({ error: 'Unknown meal plan: ' + plan_letter });
         }
 
         const schedule = weeklySchedule(plan_letter);
 
-        // Find current week
+        // Find the current week: the last schedule row that has already started
         const now = new Date();
         let current_week = null;
-        if (now >= SEMESTER_START && now < SEMESTER_END) {
+        let semester_status = 'in_progress';
+        if (now < SEMESTER_START) {
+            semester_status = 'not_started';
+        } else if (now >= SEMESTER_END) {
+            semester_status = 'ended';
+        } else {
             current_week = schedule.filter((w) => new Date(w.week_start + 'T00:00:00Z') <= now).length - 1;
         }
 
@@ -47,7 +62,9 @@ router.get('/', authenticateUser, async (req, res) => {
             total: PLANS[plan_letter].total,
             weekly_amount: PLANS[plan_letter].weekly,
             daily_amount: PLANS[plan_letter].daily,
+            semester_status, // 'not_started', 'in_progress', or 'ended'
             current_week, // null before the semester starts or after it ends
+            expected_remaining_today: round2(expectedRemaining(plan_letter, now)),
             schedule
         });
     } catch (err) {
