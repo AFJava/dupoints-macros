@@ -1,6 +1,7 @@
 // (Written with help from Claude, an LLM.)
 
 import { useState } from "react";
+import ProfileForm from "./ProfileForm.jsx";
 
 // Recharts is a library that draws bar charts for us.
 import {
@@ -46,6 +47,9 @@ export default function Dashboard({ onLogout }) {
   const [view, setView] = useState("weekly");
   const trends = view === "weekly" ? weeklyTrends : monthlyTrends;
 
+  // Whether to show the profile form instead of the dashboard.
+  const [showProfile, setShowProfile] = useState(false);
+
   // Food points spent this week = the last bar in the chart.
   const spentThisWeek = foodPointsByWeek[foodPointsByWeek.length - 1].spent;
 
@@ -53,12 +57,17 @@ export default function Dashboard({ onLogout }) {
     <div className="page">
       {/* Top bar */}
       <nav className="navbar">
-        <a href="#">Home</a>
+        <a href="#" onClick={() => setShowProfile(false)}>Home</a>
         <a href="#">Meal History</a>
+        <a href="#" onClick={() => setShowProfile(true)}>Profile</a>
         <span className="logo">DukeMeals</span>
         <button onClick={onLogout}>Log Out</button>
       </nav>
 
+      {showProfile ? (
+        <ProfileForm />
+      ) : (
+      <>
       {/* Section 1: today's nutrition */}
       <h1>Daily Intake</h1>
 
@@ -191,6 +200,8 @@ export default function Dashboard({ onLogout }) {
           </ResponsiveContainer>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

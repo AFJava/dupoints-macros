@@ -8,6 +8,7 @@ app.use(express.json()); // lets POST routes read JSON bodies
 app.use('/api/items', require('./routes/items'));
 app.use('/api/meal-logs', require('./routes/mealLogs'));
 app.use('/api/meal-totals', require('./routes/mealTotals'));
+app.use('/api/profile', require('./routes/profile'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
