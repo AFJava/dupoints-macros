@@ -1,16 +1,19 @@
+
 const express = require('express'); // Import the Express library
 const pool = require('../db'); // Import the database connection pool from the db.js file
 const { isValidDate } = require('../utils/dateUtils');
 const router = express.Router(); // Create a new router object to handle routes related to meal logs
+const authenticateUser = require('../middleware/authenticateUser');
 
 //Map selected nutrients to database column names
 const allowedNutrients = {calories: "kcal", protein: "protein_g", carbs: "carbs_g", fat: "total_fat_g", fiber: "fiber_g"};
 
-//GET /api/meal-totals?user_id=...&nutrients=...&start_date=...&end_date=...
-router.get('/', async (req, res) => {
+//GET /api/meal-totals?nutrients=...&start_date=...&end_date=...
+router.get('/', authenticateUser, async (req, res) => {
     try {
         //End is current date by default
-        const { user_id, nutrients, start_date, end_date} = req.query;
+        const { nutrients, start_date, end_date } = req.query;
+        const user_id = req.user.id;
 
         // Validate that start, end are dates
         if(!isValidDate(start_date)) {
@@ -26,7 +29,7 @@ router.get('/', async (req, res) => {
         }
 
         // Validate that start_date precedes end_date
-        if(! (start_date <= end_date)) {
+        if(!(start_date <= end_date)) {
             return res.status(400).json({
                 error: 'Start date must be on or before end date'
             });
@@ -47,14 +50,14 @@ router.get('/', async (req, res) => {
         }
 
         // Parse selected nutrient into queryable string
-        const columns = selected.map(name => allowedNutrients[name]).join(", ");
+        const columns = selected.map(name => `i.${allowedNutrients[name]}`).join(", ");
 
         const result = await pool.query(`
             SELECT i.name, ${columns}, ml.quantity FROM meal_logs ml
-            JOIN items i ON i.item_id = ml.item_id
-            WHERE user_id = $1
-                AND meal_date >= $2
-                AND meal_date <= $3`,
+            JOIN items i ON i.id = ml.item_id
+            WHERE ml.user_id = $1
+                AND ml.meal_date >= $2::date
+                AND ml.meal_date < ($3::date + INTERVAL '1 day')`,
             [user_id, start_date, end_date]
         );
 
