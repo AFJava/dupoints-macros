@@ -2,7 +2,7 @@ const express = require('express'); // Import the Express library
 const pool = require('../db'); // Import the database connection pool from the db.js file
 const router = express.Router(); // Create a new router object to handle routes related to the spending schedule
 const authenticateUser = require('../middleware/authenticateUser');
-const { PLANS, SEMESTER_START, SEMESTER_END, weeklySchedule, expectedRemaining } = require('../data/foodPointChart');
+const { PLANS, SEMESTER_START, SEMESTER_END, weeklySchedule, expectedRemaining } = require('../db/data/foodPointChart');
 
 // Rounds to 2 decimal places (money values)
 const round2 = (n) => Math.round(n * 100 + 1e-6) / 100;

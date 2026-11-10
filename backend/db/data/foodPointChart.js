@@ -20,14 +20,13 @@ const round2 = (n) => Math.round(n * 100 + 1e-6) / 100;
 // Read the CSV once when the server starts:
 // { A: { total: 3071.28, weekly: 191.96, daily: 27.42 }, B: {...}, ... }
 function loadPlans() {
-    const text = fs.readFileSync(path.join(__dirname, 'foodpoints.csv'), 'utf8');
+    const text = fs.readFileSync(path.join(__dirname, 'foodPointChart.csv'), 'utf8');
     const plans = {};
 
     text.split(/\r?\n/).slice(1).forEach((line) => {
         if (!line.trim()) return;
         const [plan, total, weekly, daily] = line.split(/[,\t]/);
-        // "Plan A" -> "A"
-        const letter = plan.replace(/plan/i, '').trim().toUpperCase();
+        const letter = plan.replace(/"/g, '').replace(/plan/i, '').trim().toUpperCase();
         plans[letter] = { total: Number(total), weekly: Number(weekly), daily: Number(daily) };
     });
 
