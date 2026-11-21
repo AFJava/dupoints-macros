@@ -10,7 +10,9 @@ const mealTypes = ["breakfast", "lunch", "dinner", "snack"];
 
 // Format a date as "Monday, November 9, 2026".
 function formatDate(dateString) {
-  const date = new Date(dateString);
+  const [year, month, day] = dateString.slice(0, 10).split("-").map(Number);
+
+  const date = new Date(year, month - 1, day);
 
   return date.toLocaleDateString("en-US", {
     weekday: "long",
@@ -22,13 +24,7 @@ function formatDate(dateString) {
 
 // Get a local calendar date key for grouping meals by day.
 function getDateKey(dateString) {
-  const date = new Date(dateString);
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return dateString.slice(0, 10);
 }
 
 export default function MealHistory() {
