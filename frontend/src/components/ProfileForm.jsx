@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient.js";
+import { mealPlans } from "./FoodPointsSection.jsx";
 
 const API_URL = "http://localhost:3001";
 
@@ -22,6 +23,7 @@ export default function ProfileForm() {
   const [weightKg, setWeightKg] = useState("");
   const [activityLevel, setActivityLevel] = useState("");
   const [goal, setGoal] = useState("maintain");
+  const [mealPlan, setMealPlan] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -54,6 +56,7 @@ export default function ProfileForm() {
         setWeightKg(String(data.body_weight_kg));
         setActivityLevel(String(data.activity_level));
         setGoal(data.goal);
+        setMealPlan(data.meal_plan_id);
       } catch {
         setError("Could not reach the server.");
       }
@@ -78,6 +81,7 @@ export default function ProfileForm() {
           body_weight_kg: Number(weightKg),
           activity_level: Number(activityLevel),
           goal: goal,
+          meal_plan_id: mealPlan || null
         }),
       });
 
@@ -133,6 +137,14 @@ export default function ProfileForm() {
           <option value="lose">Lose weight</option>
           <option value="maintain">Maintain</option>
           <option value="gain">Gain weight</option>
+        </select>
+        <select value={mealPlan} onChange={(e) => setMealPlan(e.target.value)}>
+          <option value="">Select your meal plan</option>
+          {mealPlans.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
         <button type="submit">Save</button>
       </form>

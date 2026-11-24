@@ -27,6 +27,8 @@ const mealPlans = [
   { value: "J", label: "Plan J (Swift)" },
 ];
 
+export { mealPlans };
+
 // Format a food point amount like "2,879.33".
 function formatPoints(amount) {
   return Number(amount).toLocaleString("en-US", {

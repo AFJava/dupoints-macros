@@ -11,8 +11,17 @@ router.get('/', authenticateUser, async (req, res) => {
         const user_id = req.user.id;
 
         const result = await pool.query(
-            `SELECT age, height_cm, body_weight_kg, activity_level, goal, meal_plan_id, updated_at
-            FROM user_profiles WHERE user_id = $1`,
+            `SELECT age,
+                height_cm,
+                body_weight_kg,
+                activity_level,
+                goal,
+                SUBSTRING(m.plan FROM '[A-Za-z]$') AS meal_plan_id,
+                updated_at
+            FROM user_profiles p
+            LEFT JOIN meal_plans m ON m.id = p.meal_plan_id
+            WHERE user_id = $1
+            `,
             [user_id]
         );
 
@@ -32,7 +41,7 @@ router.get('/', authenticateUser, async (req, res) => {
 router.put('/', authenticateUser, async (req, res) => {
     try {
         const user_id = req.user.id;
-        const { age, height_cm, body_weight_kg, activity_level, goal } = req.body;
+        const { age, height_cm, body_weight_kg, activity_level, goal, meal_plan_id } = req.body;
 
         // Validate that age is a positive integer
         if (!Number.isInteger(age) || age <= 0) {
@@ -68,6 +77,19 @@ router.put('/', authenticateUser, async (req, res) => {
             });
         }
 
+        // Convert the plan letter (e.g. "A") to its UUID; empty means no plan
+        let mealPlanUuid = null;
+        if (meal_plan_id !== null && meal_plan_id !== undefined && meal_plan_id !== "") {
+            const plan = await pool.query(
+                'SELECT id FROM meal_plans WHERE plan = $1',
+                [`Plan ${meal_plan_id}`]
+            );
+            if (plan.rows.length === 0) {
+                return res.status(400).json({ error: 'Invalid meal plan' });
+            }
+            mealPlanUuid = plan.rows[0].id;
+        }
+
         // Insert the profile, or update it if this user already has one
         const result = await pool.query(
             `INSERT INTO user_profiles (
@@ -76,17 +98,19 @@ router.put('/', authenticateUser, async (req, res) => {
             height_cm,
             body_weight_kg,
             activity_level,
-            goal
-            ) VALUES ($1, $2, $3, $4, $5, $6)
+            goal,
+            meal_plan_id
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (user_id) DO UPDATE SET
             age = EXCLUDED.age,
             height_cm = EXCLUDED.height_cm,
             body_weight_kg = EXCLUDED.body_weight_kg,
             activity_level = EXCLUDED.activity_level,
+            meal_plan_id = EXCLUDED.meal_plan_id,
             goal = EXCLUDED.goal,
             updated_at = NOW()
             RETURNING age, height_cm, body_weight_kg, activity_level, goal, meal_plan_id, updated_at`,
-            [user_id, age, height_cm, body_weight_kg, activity_level, goal]
+            [user_id, age, height_cm, body_weight_kg, activity_level, goal, mealPlanUuid]
         );
         res.status(200).json(result.rows[0]);
     } catch (err) {
